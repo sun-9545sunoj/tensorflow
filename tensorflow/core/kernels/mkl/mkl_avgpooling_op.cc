@@ -271,8 +271,16 @@ class MklAvgPoolingGradOp : public MklPoolingBackwardOpBase<T> {
       if (output_shape.num_elements() == 0 || grad_tensor.NumElements() == 0) {
         return;
       }
+
+      const int expected_grad_rank = is_pool2d ? 4 : 5;
+      OP_REQUIRES(context, grad_tensor.dims() == expected_grad_rank,
+                  absl::InvalidArgumentError(absl::StrCat(
+                      "Expected grad tensor to be ", expected_grad_rank,
+                      "D, but got ", grad_tensor.dims(), "D.")));
+
       MklDnnShape orig_input_mkl_shape, grad_mkl_shape;
       GetMklShape(context, kInputTensorIndexInputShape, &orig_input_mkl_shape,
+
                   this->native_format_);
       GetMklShape(context, kInputTensorIndexInputGradient, &grad_mkl_shape,
                   this->native_format_);

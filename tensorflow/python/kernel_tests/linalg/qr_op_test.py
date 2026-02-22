@@ -55,6 +55,22 @@ class QrOpTest(test.TestCase):
       linalg_ops.qr(vector)
 
   @test_util.run_in_graph_and_eager_modes(use_gpu=True)
+  def testUnknownRankDimensions(self):
+    @backprop.defun(jit_compile=True)
+    def my_func():
+      from tensorflow.python.ops import array_ops
+      from tensorflow.python.ops import gen_data_flow_ops
+      v = gen_data_flow_ops.stack_v2(max_size=10, elem_type=np.float32)
+      gen_data_flow_ops.stack_push_v2(handle=v, elem=constant_op.constant([[1.0, 2.0], [3.0, 4.0]]))
+      popped = gen_data_flow_ops.stack_pop_v2(handle=v, elem_type=np.float32)
+      return linalg_ops.qr(popped)
+
+    with self.assertRaisesRegex((ValueError, errors_impl.InvalidArgumentError),
+                                "rank"):
+      my_func()
+
+
+  @test_util.run_in_graph_and_eager_modes(use_gpu=True)
   def testConcurrentExecutesWithoutError(self):
     seed = [42, 24]
     all_ops = []

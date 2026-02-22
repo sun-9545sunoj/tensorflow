@@ -20,6 +20,8 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/op_requires.h"
 
+#include "tensorflow/core/lib/core/errors.h"
+
 namespace tensorflow {
 namespace {
 
@@ -29,6 +31,15 @@ class QROp : public XlaOpKernel {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("full_matrices", &full_matrices_));
   }
   void Compile(XlaOpKernelContext* ctx) override {
+    const TensorShape input_shape = ctx->InputShape(0);
+
+    if (input_shape.dims() < 2) {
+      ctx->ReportError(errors::InvalidArgument(
+          "QR decomposition requires an input with rank at least 2, but got rank ",
+          input_shape.dims()));
+      return;
+    }
+
     xla::XlaOp q, r;
     xla::QrExplicit(ctx->Input(0), full_matrices_, q, r);
     ctx->SetOutput(0, q);

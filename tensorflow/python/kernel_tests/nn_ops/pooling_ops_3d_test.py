@@ -189,6 +189,24 @@ class PoolingTest(test.TestCase):
           )
           self.evaluate(t)
 
+  @test_util.run_deprecated_v1
+  def testMklAvgPool3DGradInvalidRank(self):
+    # This specifically tests that the MklAvgPoolingGradOp validates grad_tensor rank.
+    with self.cached_session():
+      grad = constant_op.constant(0.0, shape=[6, 2], dtype=dtypes.float32)
+      with self.assertRaisesRegex((ValueError, errors_impl.InvalidArgumentError),
+                                  "Expected grad tensor to be"):
+        y = gen_nn_ops.avg_pool3d_grad(
+            orig_input_shape=[2, 3, 3, 3, 3],
+            grad=grad,
+            ksize=[1, 1, 1, 1, 1],
+            strides=[1, 1, 1, 1, 1],
+            padding="VALID",
+            data_format="NDHWC"
+        )
+        self.evaluate(y)
+
+
   def testMaxPool3dValidPadding(self):
     expected_output = [40.0, 41.0, 42.0]
     self._VerifyValues(

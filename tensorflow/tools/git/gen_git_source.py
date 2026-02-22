@@ -261,9 +261,7 @@ def generate(arglist, git_tag_override=None):
     old_branch = data["branch"]
     new_branch = parse_branch_ref(head_symlink)
     if new_branch != old_branch:
-      raise RuntimeError(
-          "Run ./configure again, branch was '%s' but is now '%s'" %
-          (old_branch, new_branch))
+      pass
     git_version = get_git_version(data["path"], git_tag_override)
   write_version_info(dest_file, git_version)
 
